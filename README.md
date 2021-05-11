@@ -12,6 +12,6 @@
 2. 客製化 時間週期
 3. 週期性取得每個 Runner 狀態、IP、正在運行的工作、工作連結
 
-![Screenshot1](Screenshot1)
+![Screenshot1](Screenshot1.png)
 
 ⚠️ 如果 Private GitLab 的 Domain 不支援 HTTPS，會發生 `This request has been blocked; the content must be served over HTTPS`，解決方法是直接下載此 `index.html` 到本地執行即可!! ⚠️
