@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>GitLab Runner Table</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    </head>
+<body style="background-color:WhiteSmoke;">
+
+    <!-- 輸入區 -->
+    <div class="setting" style="margin:10px 10px;">
+        <h5>🌐 Domain</h5>
+        <input type="text" id="domain" class="form-control form-control-dark" style="width: 300px;" placeholder="http://gitlab.example.com" aria-label="http://gitlab.example.com">
+        <br/>
+        <h5>🔑 PRIVATE-TOKEN</h5>
+        <input type="text" id="token" class="form-control form-control-dark" style="width: 300px;" placeholder="PRIVATE-TOKEN" aria-label="PRIVATE-TOKEN">   
+        <br/>
+        <h5>⏱️ Time Interval (取資料的時間週期)(秒)</h5>
+        <input type="text" id="inputTimeInterval" class="form-control form-control-dark" style="width: 300px;" placeholder="60" aria-label="60" value="60">
+        <br/>
+        <button class="btn btn-dark" onclick="onGetAllRunner()">Get All Runner!!</button>
+    </div>
+
+    <!-- 錯誤區 -->
+    <div style="margin:10px 10px; padding:10px 10px; background-color:Gainsboro; border-radius:5px;">
+        <h5>🚫 Error:</h5> 
+        <label id="error"></label>
+    </div>
+    
+    <!-- 時間區 -->
+    <div class="time" style="margin:10px 10px; padding:10px 10px; background-color:Gainsboro; border-radius:5px;">
+        <h5>⏰ Now Time (現在時間): </h5> 
+        <label id="nowTime"></label>
+        <h5>⏱️ Last Data Time (上次Runner資料時間): </h5> 
+        <label id="lastDataTime"></label>
+        <h5>⏱️ Time Interval (取資料的時間週期)(秒): </h5>
+        <label id="timeInterval"></label>
+    </div>
+
+    <!-- 結果區 -->
+    <div class="result" style="margin:10px 10px;">
+        <h4>🤖 Runner Table</h4> 
+        <div class="result_table"></div>
+    </div>
+    
+<script>
+
+//上次資料時間
+var lastDataTime = new Date(0, 0, 0);
+//工作ID(取消工作用)
+var timeoutID = 0;
+//檢查週期(60s)
+var timeInterval = 60; 
+
+//按下按鈕
+function onGetAllRunner(){
+    timeInterval = document.getElementById("inputTimeInterval").value; 
+    document.querySelector("#timeInterval").innerHTML = `${timeInterval}`;
+    window.clearInterval(timeoutID);
+    lastDataTime = new Date(0, 0, 0);
+    showNowTime()
+}
+
+//顯示現在時間
+function showNowTime(){
+    let nowTime = new Date();
+    document.querySelector("#nowTime").innerHTML = `${nowTime}`;
+    timeoutID = window.setTimeout('showNowTime()',1000);
+    checkLastDataTime() //每次顯示時間時，檢查上次資料時間
+}
+
+//顯示檢查時間
+function showLastDataTime(){
+    lastDataTime = new Date();
+    document.querySelector("#lastDataTime").innerHTML = `${lastDataTime}`;
+}
+
+//檢查上次資料時間
+function checkLastDataTime(){
+    let nowTime = new Date();
+    var difference = nowTime.getTime() - lastDataTime.getTime();
+    if(difference > (timeInterval * 1000)){
+        getRunners();
+        showLastDataTime();
+    }
+}
+
+//取得Runners
+function getRunners() {
+    var domain = document.getElementById("domain").value;
+    var token = document.getElementById("token").value;
+    var myHeaders = new Headers();
+    myHeaders.append("PRIVATE-TOKEN", token);
+    var requestOptions = {
+    method: 'GET',
+    headers: myHeaders,
+    redirect: 'follow'
+    };
+    fetch(domain+"/api/v4/runners?status=online", requestOptions)
+    .then(response => response.text())
+    .then(result => {
+        console.log(result);
+        document.querySelector("#error").innerHTML = ``;
+        jsonToResultTable(result);
+    })
+    .catch(error => {
+        console.log('error', error);
+        document.querySelector("#error").innerHTML = `${error}`;
+        window.clearInterval(timeoutID);
+    });
+}
+
+//設定ResultTable
+const jsonToResultTable = (json) => {
+    json = JSON.parse(json);
+    let title = `<thead><tr>${Object.keys(json[0]).map((el) => `<th>${el}</th>`).join('')}<th>RunningJob</th><th>link</th></tr></thead>`;
+    console.log(title);
+    let trs = json.map((el) => Object.values(el).map((td) => `<td>${td}</td>`).join('') + `<th id="runner_${el["id"]}_job"></th><th id="runner_${el["id"]}_link"></th></tr>` ); 
+    console.log(trs);
+    let tbody = `<tbody>${trs.map((el) => `<tr>${el}</tr>`).join('')}</tbody>`
+    let table = `<table class="table table-dark">${title}${tbody}</table>`
+    document.querySelector(".result_table").innerHTML = table;
+
+    //取得RunningJob
+    let runnerIds = json.map((el) => el["id"]);
+    console.log(runnerIds);
+    runnerIds.forEach(getJobs);
+}
+
+//取得RunningJob
+function getJobs(runnerId) {
+    var domain = document.getElementById("domain").value;
+    var token = document.getElementById("token").value;
+    var myHeaders = new Headers();
+    myHeaders.append("PRIVATE-TOKEN", token);
+    var requestOptions = {
+    method: 'GET',
+    headers: myHeaders,
+    redirect: 'follow'
+    };
+    fetch(domain+"/api/v4/runners/"+runnerId+"/jobs?status=running", requestOptions)
+    .then(response => response.text())
+    .then(result => {
+        console.log(result);
+        document.querySelector("#error").innerHTML = ``;
+        jsonToRunningJob(runnerId, result);
+    })
+    .catch(error => {
+        console.log('error', error);
+        document.querySelector("#error").innerHTML = `${error}`;
+        window.clearInterval(timeoutID);
+    });
+}
+
+//設定RunningJob
+const jsonToRunningJob = (runnerId, json) => {
+    json = JSON.parse(json);
+    if(json.length > 0){ 
+        let jobId = json[0]["id"];
+        let projectName = json[0]["project"]["name"];
+        let webURL = json[0]["web_url"];
+        console.log(jobId+" "+projectName+" "+webURL);
+        document.querySelector("#runner_"+runnerId+"_job").innerHTML = projectName;
+        document.querySelector("#runner_"+runnerId+"_link").innerHTML = `<a href="${webURL}" target="_blank" style="color:#36B6F5;">Link</a>`;
+    } else {
+        document.querySelector("#runner_"+runnerId+"_job").innerHTML = "None";
+        document.querySelector("#runner_"+runnerId+"_link").innerHTML = "None";
+    }
+}
+
+</script>
+
+</body>
+</html>
