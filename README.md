@@ -1,6 +1,10 @@
 # GitLabRunnerTable
 可以簡單"週期性" 取得 Private GitLab 的 "Runner 狀態"
 
+### Demo
+
+[GitLabRunnerTable (GitHubPage)](https://pinkpika.github.io/GitLabRunnerTable/)
+
 ### Setup
 1. 設定 Domain
 2. 設定個人專屬的 PRIVATE-TOKEN
