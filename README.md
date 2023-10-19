@@ -18,4 +18,8 @@
 
 ![Screenshot1](Screenshot1.png)
 
-⚠️ 如果 Private GitLab 的 Domain 不支援 HTTPS，會發生 `This request has been blocked; the content must be served over HTTPS`，解決方法是直接下載此 `index.html` 到本地執行即可!! ⚠️
+### Notice
+
+- `index.html` 163 行只拿出第一個 job，但有些 runner 可以設定併發處理多個 job，看自己需求調整顯示的畫面
+
+- ⚠️ 如果 Private GitLab 的 Domain 不支援 HTTPS，會發生 `This request has been blocked; the content must be served over HTTPS`，解決方法是直接下載此 `index.html` 到本地執行即可!! ⚠️
