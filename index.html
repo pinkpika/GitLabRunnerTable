@@ -160,7 +160,7 @@ function getJobs(runnerId) {
 const jsonToRunningJob = (runnerId, json) => {
     json = JSON.parse(json);
     if(json.length > 0){ 
-        let jobId = json[0]["id"];
+        let jobId = json[0]["id"]; // 這裡只拿出第一個job，但有些runner可以設定併發多個job，看自己需求調整
         let projectName = json[0]["project"]["name"];
         let webURL = json[0]["web_url"];
         console.log(jobId+" "+projectName+" "+webURL);
